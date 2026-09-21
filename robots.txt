@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.toothcarecentre.in/sitemap.xml
+Sitemap: https://abhisheksonijhon.github.io/toothcare/sitemap.xml

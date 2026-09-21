@@ -159,9 +159,30 @@
   function contactShadowTexture(THREE) {
     var c = document.createElement('canvas'); c.width = c.height = 128;
     var x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
-    g.addColorStop(0, 'rgba(8,60,62,0.34)'); g.addColorStop(0.55, 'rgba(8,60,62,0.12)'); g.addColorStop(1, 'rgba(8,60,62,0)');
+    g.addColorStop(0, 'rgba(143,229,219,0.55)'); g.addColorStop(0.55, 'rgba(143,229,219,0.16)'); g.addColorStop(1, 'rgba(143,229,219,0)');
     x.fillStyle = g; x.fillRect(0, 0, 128, 128);
     return new THREE.CanvasTexture(c);
+  }
+
+  function sparkleTexture(THREE) {
+    var c = document.createElement('canvas'); c.width = c.height = 64;
+    var x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,0.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function buildSparkles(THREE, count) {
+    var pos = new Float32Array(count * 3), col = new Float32Array(count * 3), palette = [[0.56, 0.9, 0.86], [1, 1, 1], [1, 0.82, 0.37], [1, 0.62, 0.56]];
+    for (var i = 0; i < count; i++) {
+      var r = 2.3 + Math.random() * 1.9, a = Math.random() * Math.PI * 2, y = (Math.random() - 0.5) * 4.6;
+      pos[i * 3] = Math.cos(a) * r; pos[i * 3 + 1] = y; pos[i * 3 + 2] = Math.sin(a) * r;
+      var c = palette[i % palette.length]; col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
+    }
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    var m = new THREE.PointsMaterial({ size: 0.16, map: sparkleTexture(THREE), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9 });
+    return new THREE.Points(g, m);
   }
 
   /* ---------- Scene and interaction (browser only) ---------- */
@@ -188,7 +209,9 @@
 
     scene.add(new THREE.HemisphereLight(0xffffff, 0xbfe6e2, 0.55));
     var key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(-3, 5, 5); scene.add(key);
-    var rim = new THREE.DirectionalLight(0x8fe5db, 0.9); rim.position.set(4, 1, -4); scene.add(rim);
+    var rim = new THREE.DirectionalLight(0x8fe5db, 1.1); rim.position.set(4, 1, -4); scene.add(rim);
+    var warm = new THREE.PointLight(0xffb199, 0.9, 14); warm.position.set(-3.5, -1.5, 3); scene.add(warm);
+    var sparkles = buildSparkles(THREE, 70); scene.add(sparkles);
 
     var tooth = buildTooth(THREE);
     var pivot = new THREE.Group(); pivot.add(tooth.group); scene.add(pivot);
@@ -257,6 +280,7 @@
 
       var bob = reduce ? 0 : Math.sin(now / 1400) * 0.06;
       pivot.rotation.y = state.yaw; pivot.rotation.x = state.pitch; pivot.position.y = bob;
+      sparkles.rotation.y = now / 9000; sparkles.position.y = Math.sin(now / 2200) * 0.08;
       shadow.scale.setScalar(1 - bob * 0.6); shadow.material.opacity = 1 - bob * 0.8;
       renderer.render(scene, camera);
 
